@@ -18,8 +18,10 @@ A Revit add-in that exposes a JSON-RPC TCP server on `localhost:8080`, allowing 
    ```
 3. Place `mcp-servers-for-revit.addin` and the `revit_mcp_plugin\` folder (containing `RevitMCPPlugin.dll` and the `Commands\` subdirectory) in that directory.
 4. Ensure `command.json` is present in `Commands/RevitMCPCommandSet/` (see `PathManager.cs` for the resolved path).
-5. Start Revit — the **Revit MCP Plugin** ribbon panel will appear.
-6. Click **Revit MCP Switch** to start the TCP server.
+5. Start Revit — the **Revit MCP Plugin** ribbon panel will appear with an MCP icon.
+6. Click the MCP icon to toggle the TCP server on/off. The icon indicates connection state:
+   - **Red** — server is not connected
+   - **Green** — server is connected and ready
 
 ## How It Works
 
