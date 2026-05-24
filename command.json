@@ -127,6 +127,141 @@
       "commandName": "get_parameters_from_elementid",
       "description": "Get all parameters for elements by ID, with optional parameter name filter",
       "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_category_by_keyword",
+      "description": "Search Revit categories by keyword",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_model_categories",
+      "description": "Get all categories in the Revit model",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_all_used_families_in_model",
+      "description": "Get all loaded families in the Revit model",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_all_used_types_of_a_family",
+      "description": "Get all types belonging to a specific family",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_all_elements_of_specific_families",
+      "description": "Get all placed instances of specific families",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_categories_from_elementids",
+      "description": "Get categories for a list of element IDs",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_element_types_for_element_ids",
+      "description": "Get the element type for each element ID",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_object_classes_from_elementids",
+      "description": "Get the .NET class name for each element ID",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_elements_by_category",
+      "description": "Get all elements of a specific Revit category by category ID",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_elements_on_level",
+      "description": "Get all elements on a named Revit level, with optional category filter",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_all_elements_shown_in_view",
+      "description": "Get all element IDs visible in a specific Revit view",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_location_for_element_ids",
+      "description": "Get the location (point or curve endpoints) for Revit elements",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_boundingboxes_for_element_ids",
+      "description": "Get the bounding box min/max coordinates for Revit elements",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_parameter_value_for_element_ids",
+      "description": "Get a single named parameter value across multiple Revit elements",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_all_warnings_in_model",
+      "description": "Get all warnings in the current Revit model",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_worksets_from_elementids",
+      "description": "Get workset assignment for Revit elements by ID",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "get_all_workset_information",
+      "description": "Get all workset information for the current Revit document",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_parameter_value_for_elements",
+      "description": "Set a parameter value for multiple Revit elements",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_movement_for_elements",
+      "description": "Move Revit elements by a translation vector in internal units (feet)",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_rotation_for_elements",
+      "description": "Rotate Revit elements around a Z-axis by a given angle in radians",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_user_selection_in_revit",
+      "description": "Set the active selection in Revit to the specified element IDs",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_isolated_elements_in_view",
+      "description": "Temporarily isolate specific elements in a Revit view",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_category_visibility_in_view",
+      "description": "Show or hide categories in a Revit view",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_isolate_categories_in_view",
+      "description": "Hide all categories in a view except the specified ones",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_reset_category_visibility_in_view",
+      "description": "Reset all category visibility overrides in a view (make all visible)",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "set_graphic_overrides_for_elements_in_view",
+      "description": "Apply graphic color overrides to elements in a Revit view",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "create_sheet",
+      "description": "Create one or more sheets in Revit with a title block, sheet number, and sheet name",
+      "assemblyPath": "RevitMCPCommandSet.dll"
     }
   ]
 }

@@ -127,6 +127,15 @@ public class RevitToolsHandler(RevitWebSocketClient wsClient, DatabaseService db
         return await wsClient.SendCommandAsync("create_room", new { data });
     }
 
+    [McpServerTool(Name = "create_sheet")]
+    [Description("Create one or more sheets in Revit. Each sheet requires a sheet number and name. Optionally specify a title block by type ID, family name, or type name — if omitted the first available title block is used.")]
+    public async Task<string> CreateSheet(
+        [Description("Array of sheet objects to create. Each object: sheetNumber (string), sheetName (string), titleBlockTypeId (number, optional), titleBlockFamilyName (string, optional), titleBlockTypeName (string, optional), parameters (object, optional key-value pairs for additional sheet parameters).")]
+        JsonElement data)
+    {
+        return await wsClient.SendCommandAsync("create_sheet", new { data });
+    }
+
     [McpServerTool(Name = "create_structural_framing_system")]
     [Description("Create a structural beam framing system in Revit. Generates beams within a rectangular boundary at fixed spacing intervals. The system uses Revit's BeamSystem API to create properly connected beam layouts. All units are in millimeters (mm).")]
     public async Task<string> CreateStructuralFramingSystem(
@@ -315,6 +324,277 @@ public class RevitToolsHandler(RevitWebSocketClient wsClient, DatabaseService db
         string? tagTypeId = null)
     {
         return await wsClient.SendCommandAsync("tag_walls", new { useLeader, tagTypeId });
+    }
+
+    // ── Category / family / type queries ────────────────────────────────────
+
+    [McpServerTool(Name = "get_category_by_keyword")]
+    [Description("Search Revit categories by keyword. Returns matching categories with their IDs, names, and types.")]
+    public async Task<string> GetCategoryByKeyword(
+        [Description("Keyword to search for in category names (case-insensitive partial match)")]
+        string keyword)
+    {
+        return await wsClient.SendCommandAsync("get_category_by_keyword", new { keyword });
+    }
+
+    [McpServerTool(Name = "get_model_categories")]
+    [Description("Get all categories defined in the Revit model, ordered by name. Returns category IDs, names, and category types.")]
+    public async Task<string> GetModelCategories()
+    {
+        return await wsClient.SendCommandAsync("get_model_categories", new { });
+    }
+
+    [McpServerTool(Name = "get_all_used_families_in_model")]
+    [Description("Get all loaded (non-in-place) families in the Revit model. Returns family IDs and names ordered alphabetically.")]
+    public async Task<string> GetAllUsedFamiliesInModel()
+    {
+        return await wsClient.SendCommandAsync("get_all_used_families_in_model", new { });
+    }
+
+    [McpServerTool(Name = "get_all_used_types_of_a_family")]
+    [Description("Get all types (FamilySymbols) belonging to a specific family. Returns type IDs and names.")]
+    public async Task<string> GetAllUsedTypesOfAFamily(
+        [Description("The exact name of the family to query")]
+        string familyName)
+    {
+        return await wsClient.SendCommandAsync("get_all_used_types_of_a_family", new { familyName });
+    }
+
+    [McpServerTool(Name = "get_all_elements_of_specific_families")]
+    [Description("Get all placed instances (FamilyInstances) belonging to one or more named families.")]
+    public async Task<string> GetAllElementsOfSpecificFamilies(
+        [Description("List of family names to search for (case-insensitive)")]
+        string[] familyNames)
+    {
+        return await wsClient.SendCommandAsync("get_all_elements_of_specific_families", new { familyNames });
+    }
+
+    [McpServerTool(Name = "get_categories_from_elementids")]
+    [Description("Given a list of element IDs, return the Revit categories they belong to, grouped by category name.")]
+    public async Task<string> GetCategoriesFromElementIds(
+        [Description("Array of element IDs as strings")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("get_categories_from_elementids", new { elementIds });
+    }
+
+    [McpServerTool(Name = "get_element_types_for_element_ids")]
+    [Description("Given a list of element IDs, return the element type (TypeId and type name) for each element.")]
+    public async Task<string> GetElementTypesForElementIds(
+        [Description("Array of element IDs as strings")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("get_element_types_for_element_ids", new { elementIds });
+    }
+
+    [McpServerTool(Name = "get_object_classes_from_elementids")]
+    [Description("Given a list of element IDs, return the .NET class name (FullName) of each element's runtime type.")]
+    public async Task<string> GetObjectClassesFromElementIds(
+        [Description("Array of element IDs as strings")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("get_object_classes_from_elementids", new { elementIds });
+    }
+
+    // ── Spatial / element queries ────────────────────────────────────────────
+
+    [McpServerTool(Name = "get_elements_by_category")]
+    [Description("Get all element IDs belonging to a specific Revit category. Use get_model_categories first to find the category ID.")]
+    public async Task<string> GetElementsByCategory(
+        [Description("The Revit BuiltInCategory integer value (e.g. -2000011 for OST_Walls). Use get_model_categories to find IDs.")]
+        int categoryId)
+    {
+        return await wsClient.SendCommandAsync("get_elements_by_category", new { categoryId });
+    }
+
+    [McpServerTool(Name = "get_elements_on_level")]
+    [Description("Get all elements associated with a named Revit level. Checks LEVEL_PARAM, WALL_BASE_CONSTRAINT, FAMILY_LEVEL_PARAM, and the 'Level' parameter.")]
+    public async Task<string> GetElementsOnLevel(
+        [Description("The exact name of the level (e.g. 'Level 1')")]
+        string levelName,
+        [Description("Optional list of category names to filter results (e.g. ['Walls', 'Floors'])")]
+        string[]? categories = null)
+    {
+        return await wsClient.SendCommandAsync("get_elements_on_level",
+            new { levelName, categories = categories ?? Array.Empty<string>() });
+    }
+
+    [McpServerTool(Name = "get_all_elements_shown_in_view")]
+    [Description("Get all element IDs visible (not hidden) in a specific Revit view.")]
+    public async Task<string> GetAllElementsShownInView(
+        [Description("The element ID of the view to query")]
+        long viewId)
+    {
+        return await wsClient.SendCommandAsync("get_all_elements_shown_in_view", new { viewId });
+    }
+
+    [McpServerTool(Name = "get_location_for_element_ids")]
+    [Description("Get the location of Revit elements. Returns a point (x,y,z) for point-based elements or start/end points for curve-based elements. Coordinates are in Revit internal units (feet).")]
+    public async Task<string> GetLocationForElementIds(
+        [Description("Array of element IDs as strings")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("get_location_for_element_ids", new { elementIds });
+    }
+
+    [McpServerTool(Name = "get_boundingboxes_for_element_ids")]
+    [Description("Get the axis-aligned bounding box (min and max corners) for each element. Coordinates are in Revit internal units (feet).")]
+    public async Task<string> GetBoundingBoxesForElementIds(
+        [Description("Array of element IDs as strings")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("get_boundingboxes_for_element_ids", new { elementIds });
+    }
+
+    [McpServerTool(Name = "get_parameter_value_for_element_ids")]
+    [Description("Get the value of a single named parameter across multiple elements. More efficient than get_parameters_from_elementid when you only need one parameter.")]
+    public async Task<string> GetParameterValueForElementIds(
+        [Description("The name of the parameter to read")]
+        string parameterName,
+        [Description("Array of element IDs as strings")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("get_parameter_value_for_element_ids", new { parameterName, elementIds });
+    }
+
+    [McpServerTool(Name = "get_all_warnings_in_model")]
+    [Description("Get all warnings currently in the Revit model, including description, severity, and the element IDs involved.")]
+    public async Task<string> GetAllWarningsInModel()
+    {
+        return await wsClient.SendCommandAsync("get_all_warnings_in_model", new { });
+    }
+
+    // ── Workset queries ──────────────────────────────────────────────────────
+
+    [McpServerTool(Name = "get_worksets_from_elementids")]
+    [Description("Get workset assignment for each element by ID. Returns workset name and ID. Only works on workshared models.")]
+    public async Task<string> GetWorksetsFromElementIds(
+        [Description("Array of Revit element IDs as strings")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("get_worksets_from_elementids", new { elementIds });
+    }
+
+    [McpServerTool(Name = "get_all_workset_information")]
+    [Description("Get all user worksets in the current Revit model, including name, owner, and open/closed state. Only works on workshared models.")]
+    public async Task<string> GetAllWorksetInformation()
+    {
+        return await wsClient.SendCommandAsync("get_all_workset_information", new { });
+    }
+
+    // ── Modify / write tools ─────────────────────────────────────────────────
+
+    [McpServerTool(Name = "set_parameter_value_for_elements")]
+    [Description("Set a named parameter to a given value for multiple Revit elements. Handles String, Double, Integer, and ElementId storage types.")]
+    public async Task<string> SetParameterValueForElements(
+        [Description("Name of the parameter to set")]
+        string parameterName,
+        [Description("Array of element IDs to update")]
+        string[] elementIds,
+        [Description("Value to set (will be coerced to the parameter's storage type)")]
+        string value)
+    {
+        return await wsClient.SendCommandAsync("set_parameter_value_for_elements", new { parameterName, elementIds, value });
+    }
+
+    [McpServerTool(Name = "set_movement_for_elements")]
+    [Description("Move Revit elements by a translation vector. Values are in Revit internal units (feet). Divide mm by 304.8 to convert.")]
+    public async Task<string> SetMovementForElements(
+        [Description("Array of element IDs to move")]
+        string[] elementIds,
+        [Description("Translation in X direction (feet)")]
+        double dx,
+        [Description("Translation in Y direction (feet)")]
+        double dy,
+        [Description("Translation in Z direction (feet)")]
+        double dz)
+    {
+        return await wsClient.SendCommandAsync("set_movement_for_elements", new { elementIds, dx, dy, dz });
+    }
+
+    [McpServerTool(Name = "set_rotation_for_elements")]
+    [Description("Rotate Revit elements around a vertical (Z) axis by a given angle in radians.")]
+    public async Task<string> SetRotationForElements(
+        [Description("Array of element IDs to rotate")]
+        string[] elementIds,
+        [Description("Rotation angle in radians")]
+        double radians,
+        [Description("X coordinate of the rotation axis start point (feet, default 0)")]
+        double axisStartX = 0,
+        [Description("Y coordinate of the rotation axis start point (feet, default 0)")]
+        double axisStartY = 0,
+        [Description("Z coordinate of the rotation axis start point (feet, default 0)")]
+        double axisStartZ = 0)
+    {
+        return await wsClient.SendCommandAsync("set_rotation_for_elements",
+            new { elementIds, radians, axisStartX, axisStartY, axisStartZ });
+    }
+
+    [McpServerTool(Name = "set_user_selection_in_revit")]
+    [Description("Set the active user selection in Revit to the specified element IDs. This highlights elements in the Revit UI.")]
+    public async Task<string> SetUserSelectionInRevit(
+        [Description("Array of element IDs to select")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("set_user_selection_in_revit", new { elementIds });
+    }
+
+    [McpServerTool(Name = "set_isolated_elements_in_view")]
+    [Description("Temporarily isolate specific elements in a Revit view, hiding all others.")]
+    public async Task<string> SetIsolatedElementsInView(
+        [Description("ID of the view to apply isolation in")]
+        string viewId,
+        [Description("Array of element IDs to isolate")]
+        string[] elementIds)
+    {
+        return await wsClient.SendCommandAsync("set_isolated_elements_in_view", new { viewId, elementIds });
+    }
+
+    [McpServerTool(Name = "set_category_visibility_in_view")]
+    [Description("Show or hide specific categories in a Revit view by category ID. Use get_model_categories to find category IDs.")]
+    public async Task<string> SetCategoryVisibilityInView(
+        [Description("ID of the view to modify")]
+        string viewId,
+        [Description("Array of built-in category integer IDs to show or hide")]
+        long[] categoryIds,
+        [Description("True to show the categories, false to hide them")]
+        bool visible)
+    {
+        return await wsClient.SendCommandAsync("set_category_visibility_in_view", new { viewId, categoryIds, visible });
+    }
+
+    [McpServerTool(Name = "set_isolate_categories_in_view")]
+    [Description("Hide all categories in a view except the ones specified. All other categories will be hidden.")]
+    public async Task<string> SetIsolateCategoriesInView(
+        [Description("ID of the view to modify")]
+        string viewId,
+        [Description("Array of built-in category integer IDs to keep visible")]
+        long[] categoryIds)
+    {
+        return await wsClient.SendCommandAsync("set_isolate_categories_in_view", new { viewId, categoryIds });
+    }
+
+    [McpServerTool(Name = "set_reset_category_visibility_in_view")]
+    [Description("Reset all category visibility overrides in a view, making every category visible again.")]
+    public async Task<string> SetResetCategoryVisibilityInView(
+        [Description("ID of the view to reset")]
+        string viewId)
+    {
+        return await wsClient.SendCommandAsync("set_reset_category_visibility_in_view", new { viewId });
+    }
+
+    [McpServerTool(Name = "set_graphic_overrides_for_elements_in_view")]
+    [Description("Apply a colour graphic override to elements in a Revit view. Overrides both projection line and surface foreground pattern colour.")]
+    public async Task<string> SetGraphicOverridesForElementsInView(
+        [Description("ID of the view to apply overrides in")]
+        string viewId,
+        [Description("Array of element IDs to override")]
+        string[] elementIds,
+        [Description("RGB colour as [R, G, B] integers 0-255. Defaults to red [255, 0, 0] if omitted.")]
+        int[]? colorRgb = null)
+    {
+        return await wsClient.SendCommandAsync("set_graphic_overrides_for_elements_in_view",
+            new { viewId, elementIds, colorRgb });
     }
 
     // ── Local database tools (no Revit call) ────────────────────────────────

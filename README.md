@@ -1,10 +1,10 @@
-[![Cover Image](./assets/cover.png?v=2)](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit)
+[![Cover Image](./plugin/Core/Resources/mcp-server-connected-32.png)](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit)
 
-# mcp-servers-for-revit
+# c# mcp-servers-for-revit
 
 **Connect AI assistants to Autodesk Revit via the Model Context Protocol.**
 
-mcp-servers-for-revit enables AI clients like Claude, Cline, and other MCP-compatible tools to read, create, modify, and delete elements in Revit projects. It consists of three components: a TypeScript MCP server that exposes tools to AI, a C# Revit add-in that bridges commands into Revit, and a command set that implements the actual Revit API operations.
+mcp-servers-for-revit enables AI clients like Claude, Cline, and other MCP-compatible tools to read, create, modify, and delete elements in Revit projects. It consists of three components: a C# .NET MCP server that exposes tools to AI, a C# Revit add-in that bridges commands into Revit, and a command set that implements the actual Revit API operations.
 
 > [!NOTE]
 > This is a fork of the original [revit-mcp](https://github.com/mcp-servers-for-revit/revit-mcp) project with additional tools and functionality improvements.
@@ -14,7 +14,7 @@ mcp-servers-for-revit enables AI clients like Claude, Cline, and other MCP-compa
 ```mermaid
 flowchart LR
     Client["MCP Client<br/>(Claude, Cline, etc.)"]
-    Server["MCP Server<br/><code>server/</code>"]
+    Server["MCP Server<br/><code>revit-mcp-server/</code>"]
     Plugin["Revit Plugin<br/><code>plugin/</code>"]
     CommandSet["Command Set<br/><code>commandset/</code>"]
     Revit["Revit API"]
@@ -25,11 +25,10 @@ flowchart LR
     CommandSet -->|executes| Revit
 ```
 
-The **MCP Server** (TypeScript) translates tool calls from AI clients into WebSocket messages. The **Revit Plugin** (C#) runs inside Revit, listens for those messages, and dispatches them to the **Command Set** (C#), which executes the actual Revit API operations and returns results back up the chain.
+The **MCP Server** (C#, .NET 9) translates tool calls from AI clients into WebSocket messages. The **Revit Plugin** (C#) runs inside Revit, listens for those messages, and dispatches them to the **Command Set** (C#), which executes the actual Revit API operations and returns results back up the chain.
 
 ## Requirements
 
-- **Node.js 18+** (for the MCP server)
 - **Autodesk Revit 2020 - 2026** (any supported version)
 
 ## Quick Start (Using a Release)
@@ -63,14 +62,14 @@ The **MCP Server** (TypeScript) translates tool calls from AI clients into WebSo
 
 ## MCP Server Setup
 
-The MCP server is published as an npm package and can be run directly with `npx`.
+The MCP server is a self-contained `.exe` — no runtime required. Download `RevitMcpServer.exe` from the [Releases](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit/releases) page and place it anywhere on your machine.
 
 **Claude Code**
 
 Run this in a **terminal** (not inside Claude Code):
 
 ```bash
-claude mcp add mcp-server-for-revit -- cmd /c npx -y mcp-server-for-revit
+claude mcp add revit-mcp -- "C:\path\to\RevitMcpServer.exe"
 ```
 
 **Claude Desktop**
@@ -80,9 +79,8 @@ Claude Desktop → Settings → Developer → Edit Config → `claude_desktop_co
 ```json
 {
     "mcpServers": {
-        "mcp-server-for-revit": {
-            "command": "cmd",
-            "args": ["/c", "npx", "-y", "mcp-server-for-revit"]
+        "revit-mcp": {
+            "command": "C:\\path\\to\\RevitMcpServer.exe"
         }
     }
 }
@@ -111,15 +109,56 @@ If using a release ZIP, the command set is pre-installed inside the plugin. For 
 
 ## Supported Tools
 
+### Query — Elements & Views
+
 | Tool | Description |
 | ---- | ----------- |
 | `get_current_view_info` | Get current active view info |
 | `get_current_view_elements` | Get elements from the current active view |
-| `get_available_family_types` | Get available family types in current project |
+| `get_all_elements_shown_in_view` | Get all element IDs visible in a specific view |
 | `get_selected_elements` | Get currently selected elements |
-| `get_material_quantities` | Calculate material quantities and takeoffs |
+| `get_available_family_types` | Get available family types in current project |
+| `get_elements_by_category` | Get all elements of a specific category |
+| `get_elements_on_level` | Get all elements on a named level |
+| `get_all_elements_of_specific_families` | Get all instances of specific families |
 | `ai_element_filter` | Intelligent element querying tool for AI assistants |
+
+### Query — Element Properties
+
+| Tool | Description |
+| ---- | ----------- |
+| `get_parameters_from_elementid` | Get all parameters for elements by ID |
+| `get_parameter_value_for_element_ids` | Get a single named parameter value across multiple elements |
+| `get_location_for_element_ids` | Get the location (point or curve) for elements |
+| `get_boundingboxes_for_element_ids` | Get the bounding box for elements |
+| `get_element_types_for_element_ids` | Get the element type for each element |
+| `get_object_classes_from_elementids` | Get the .NET class name for each element |
+| `get_categories_from_elementids` | Get categories for a list of element IDs |
+
+### Query — Model & Families
+
+| Tool | Description |
+| ---- | ----------- |
+| `get_model_categories` | Get all categories in the model |
+| `get_category_by_keyword` | Search categories by keyword |
+| `get_all_used_families_in_model` | List all loaded families |
+| `get_all_used_types_of_a_family` | Get all types for a specific family |
+| `get_material_quantities` | Calculate material quantities and takeoffs |
 | `analyze_model_statistics` | Analyze model complexity with element counts |
+| `export_room_data` | Export all room data from the project |
+| `get_all_warnings_in_model` | Get all warnings in the current model |
+
+### Query — Worksets
+
+| Tool | Description |
+| ---- | ----------- |
+| `get_all_workset_information` | Get all worksets in the model |
+| `get_worksets_from_elementids` | Get workset assignment for elements by ID |
+
+### Create
+
+| Tool | Description |
+| ---- | ----------- |
 | `create_point_based_element` | Create point-based elements (door, window, furniture) |
 | `create_line_based_element` | Create line-based elements (wall, beam, pipe) |
 | `create_surface_based_element` | Create surface-based elements (floor, ceiling, roof) |
@@ -127,16 +166,45 @@ If using a release ZIP, the command set is pre-installed inside the plugin. For 
 | `create_level` | Create levels at specified elevations |
 | `create_room` | Create and place rooms at specified locations |
 | `create_dimensions` | Create dimension annotations in the current view |
+| `create_sheet` | Create sheets with a title block, number, and name |
 | `create_structural_framing_system` | Create a structural beam framing system |
+
+### Modify
+
+| Tool | Description |
+| ---- | ----------- |
+| `set_parameter_value_for_elements` | Set a parameter value for multiple elements |
+| `set_movement_for_elements` | Move elements by a translation vector |
+| `set_rotation_for_elements` | Rotate elements around a Z axis |
+| `operate_element` | Operate on elements (select, setColor, hide, isolate, etc.) |
 | `delete_element` | Delete elements by ID |
-| `operate_element` | Operate on elements (select, setColor, hide, etc.) |
+
+### Visualisation
+
+| Tool | Description |
+| ---- | ----------- |
 | `color_elements` | Color elements based on a parameter value |
+| `set_graphic_overrides_for_elements_in_view` | Apply colour overrides to elements in a view |
+| `set_category_visibility_in_view` | Show or hide categories in a view |
+| `set_isolate_categories_in_view` | Isolate specific categories in a view |
+| `set_reset_category_visibility_in_view` | Reset all category visibility overrides in a view |
+| `set_isolated_elements_in_view` | Temporarily isolate specific elements in a view |
+| `set_user_selection_in_revit` | Set the active selection in Revit |
 | `tag_all_walls` | Tag all walls in the current view |
 | `tag_all_rooms` | Tag all rooms in the current view |
-| `export_room_data` | Export all room data from the project |
+
+### Data Storage
+
+| Tool | Description |
+| ---- | ----------- |
 | `store_project_data` | Store project metadata in local database |
 | `store_room_data` | Store room metadata in local database |
 | `query_stored_data` | Query stored project and room data |
+
+### Advanced
+
+| Tool | Description |
+| ---- | ----------- |
 | `send_code_to_revit` | Send C# code to Revit to execute |
 | `say_hello` | Display a greeting dialog in Revit (connection test) |
 
@@ -226,12 +294,11 @@ public class MyTests : RevitApiTest
 ### MCP Server
 
 ```bash
-cd server
-npm install
-npm run build
+cd revit-mcp-server
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-The server compiles TypeScript to `server/build/`. During development you can run it directly with `npx tsx server/src/index.ts`.
+Output: `revit-mcp-server\bin\Release\net9.0\win-x64\publish\RevitMcpServer.exe` — a single self-contained executable, no .NET runtime required on the target machine.
 
 ### Revit Plugin + Command Set
 
@@ -242,18 +309,74 @@ Open `mcp-servers-for-revit.sln` in Visual Studio. The solution contains both th
 
 Building the solution automatically assembles the complete deployable layout in `plugin/bin/AddIn <year> <config>/` - the command set is copied into the plugin's `Commands/` folder as part of the build.
 
+## Building for Release
+
+### C# MCP Server
+
+```bash
+cd revit-mcp-server
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+```
+
+| Output | Location |
+|--------|----------|
+| `RevitMcpServer.exe` | `revit-mcp-server\bin\Release\net9.0\win-x64\publish\` |
+
+### Revit Plugin + Command Set
+
+Each Revit version has its own release configuration. Run from the repo root (or open in Visual Studio and select the configuration):
+
+```bash
+# Revit 2020 (.NET 4.8)
+dotnet build mcp-servers-for-revit.sln -c "Release R20"
+
+# Revit 2021 (.NET 4.8)
+dotnet build mcp-servers-for-revit.sln -c "Release R21"
+
+# Revit 2022 (.NET 4.8)
+dotnet build mcp-servers-for-revit.sln -c "Release R22"
+
+# Revit 2023 (.NET 4.8)
+dotnet build mcp-servers-for-revit.sln -c "Release R23"
+
+# Revit 2024 (.NET 4.8)
+dotnet build mcp-servers-for-revit.sln -c "Release R24"
+
+# Revit 2025 (.NET 8)
+dotnet build mcp-servers-for-revit.sln -c "Release R25"
+
+# Revit 2026 (.NET 8)
+dotnet build mcp-servers-for-revit.sln -c "Release R26"
+```
+
+Each build produces a ready-to-deploy addin layout at:
+
+```
+plugin\bin\AddIn <year> Release R<xx>\
+├── mcp-servers-for-revit.addin
+└── revit_mcp_plugin\
+    ├── RevitMCPPlugin.dll
+    └── Commands\
+        └── RevitMCPCommandSet\
+            ├── command.json
+            └── <year>\
+                └── RevitMCPCommandSet.dll
+```
+
+Copy the contents of that folder to `%AppData%\Autodesk\Revit\Addins\<year>\` to deploy.
+
 ## Project Structure
 
 ```
 mcp-servers-for-revit/
 ├── mcp-servers-for-revit.sln    # Combined solution (plugin + commandset + tests)
-├── command.json     # Command set manifest
-├── server/          # MCP server (TypeScript) - tools exposed to AI clients
-├── plugin/          # Revit add-in (C#) - WebSocket bridge inside Revit
-├── commandset/      # Command implementations (C#) - Revit API operations
-├── tests/           # Integration tests (C#) - TUnit tests against live Revit
-├── assets/          # Images for documentation
-├── .github/         # CI/CD workflows, contributing guide, code of conduct
+├── command.json                 # Command set manifest
+├── revit-mcp-server/            # MCP server (C#, .NET 9) - tools exposed to AI clients
+├── plugin/                      # Revit add-in (C#) - WebSocket bridge inside Revit
+├── commandset/                  # Command implementations (C#) - Revit API operations
+├── tests/                       # Integration tests (C#) - TUnit tests against live Revit
+├── assets/                      # Images for documentation
+├── .github/                     # CI/CD workflows, contributing guide, code of conduct
 ├── LICENSE
 └── README.md
 ```
@@ -262,13 +385,15 @@ mcp-servers-for-revit/
 
 A single `v*` tag drives the entire release. The [release workflow](.github/workflows/release.yml) automatically:
 
+- Builds `RevitMcpServer.exe` (self-contained, no runtime required)
 - Builds the Revit plugin + command set for Revit 2020-2026
-- Creates a GitHub release with `mcp-servers-for-revit-vX.Y.Z-Revit<year>.zip` assets
-- Publishes the MCP server to npm as [`mcp-server-for-revit`](https://www.npmjs.com/package/mcp-server-for-revit)
+- Creates a GitHub release with:
+  - `RevitMcpServer.exe` as a standalone asset
+  - `mcp-servers-for-revit-vX.Y.Z-Revit<year>.zip` assets for each Revit version
 
 To create a release:
 
-1. Run the bump script (updates `server/package.json`, `server/package-lock.json`, and `plugin/Properties/AssemblyInfo.cs`, then commits and tags):
+1. Run the bump script (updates `plugin/Properties/AssemblyInfo.cs`, then commits and tags):
    ```powershell
    ./scripts/release.ps1 -Version X.Y.Z
    ```
@@ -277,9 +402,6 @@ To create a release:
    ```bash
    git push origin main --tags
    ```
-
-> [!NOTE]
-> npm publish uses [trusted publishing](https://docs.npmjs.com/trusted-publishers/) via OIDC — no npm token is required. Provenance attestation is generated automatically.
 
 ## Acknowledgements
 
@@ -290,6 +412,8 @@ This project is a fork of the work by the [mcp-servers-for-revit](https://github
 - [revit-mcp-commandset](https://github.com/mcp-servers-for-revit/revit-mcp-commandset) - Command set
 
 Thank you to the original authors for creating the foundation that this project builds upon.
+
+A number of the additional tools added in this project were inspired by [revit-claude-mcp](https://github.com/IbrahimFahdah/revit-claude-mcp) by Ibrahim Fahdah. Thank you for sharing that work openly.
 
 ## License
 

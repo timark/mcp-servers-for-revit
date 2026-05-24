@@ -61,9 +61,7 @@
 		<PackageReference Include="RevitMCPSDK" Version="$(RevitVersion).*" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="System.Net.Http" />
-    </ItemGroup>
+
 
     <Target Name="DeployCommandSet" AfterTargets="Build">
         <PropertyGroup>
